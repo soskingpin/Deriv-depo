@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>instantderivdeposit.com</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root{
+    --red:#ff1a1a;
+    --gold:#ffd36a;
+}
+body{
+    margin:0;
+    font-family:'Segoe UI',sans-serif;
+    background:#000;
+    color:white;
+    overflow:hidden;
+}
+
+/* ANIMATED BACKGROUND */
+.bg{
+    position:fixed;
+    inset:0;
+    z-index:-1;
+}
+.bg span{
+    position:absolute;
+    width:6px;
+    height:6px;
+    background:var(--red);
+    border-radius:50%;
+    animation:float 12s linear infinite;
+    opacity:.4;
+}
+.bg span:nth-child(odd){background:var(--gold);}
+@keyframes float{
+    from{transform:translateY(100vh) scale(0);}
+    to{transform:translateY(-10vh) scale(1.2);}
+}
+
+/* PAGES */
+.page{
+    position:absolute;
+    inset:0;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    transition:.6s;
+}
+.hidden{
+    opacity:0;
+    pointer-events:none;
+    transform:scale(1.05);
+}
+
+/* CARD */
+.card{
+    width:90%;
+    max-width:440px;
+    padding:38px;
+    border-radius:24px;
+    background:rgba(255,255,255,.06);
+    backdrop-filter:blur(18px);
+    box-shadow:
+        0 0 45px rgba(255,0,0,.6),
+        0 0 30px rgba(255,215,0,.4);
+    animation:glow 2.5s infinite;
+}
+@keyframes glow{
+    0%{box-shadow:0 0 25px rgba(255,0,0,.4),0 0 20px rgba(255,215,0,.3);}
+    50%{box-shadow:0 0 70px rgba(255,0,0,.9),0 0 45px rgba(255,215,0,.7);}
+    100%{box-shadow:0 0 25px rgba(255,0,0,.4),0 0 20px rgba(255,215,0,.3);}
+}
+
+h1,h2{
+    text-align:center;
+    color:var(--gold);
+    text-shadow:0 0 14px var(--gold);
+}
+
+input,select,button{
+    width:100%;
+    margin-top:14px;
+    padding:14px;
+    border-radius:14px;
+    border:none;
+    font-size:15px;
+}
+input,select{
+    background:#0d0d0d;
+    color:white;
+}
+button{
+    margin-top:22px;
+    background:linear-gradient(135deg,var(--red),#ff6b6b);
+    color:white;
+    font-weight:bold;
+    cursor:pointer;
+    box-shadow:0 0 25px var(--red);
+}
+button:hover{box-shadow:0 0 45px var(--gold);}
+
+.loader{
+    width:70px;
+    height:70px;
+    border-radius:50%;
+    border:4px solid rgba(255,255,255,.15);
+    border-top:4px solid var(--gold);
+    margin:25px auto;
+    animation:spin 1s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.progress{
+    text-align:center;
+    font-size:22px;
+    color:var(--gold);
+    text-shadow:0 0 10px var(--gold);
+}
+
+.message{
+    text-align:center;
+    line-height:1.6;
+    margin-top:10px;
+}
+.ref{
+    margin-top:12px;
+    text-align:center;
+    font-size:13px;
+    color:#aaa;
+}
+.back{
+    margin-top:18px;
+    background:transparent;
+    border:1px solid var(--gold);
+    color:var(--gold);
+}
+</style>
+</head>
+
+<body>
+
+<!-- BACKGROUND PARTICLES -->
+<div class="bg">
+  <span style="left:5%;animation-delay:0s"></span>
+  <span style="left:15%;animation-delay:3s"></span>
+  <span style="left:30%;animation-delay:6s"></span>
+  <span style="left:45%;animation-delay:1s"></span>
+  <span style="left:60%;animation-delay:4s"></span>
+  <span style="left:75%;animation-delay:2s"></span>
+  <span style="left:90%;animation-delay:5s"></span>
+</div>
+
+<!-- SOUND -->
+<audio id="clickSound">
+  <source src="https://assets.mixkit.co/sfx/preview/mixkit-modern-click-box-check-1120.mp3">
+</audio>
+
+<!-- FORM PAGE -->
+<div class="page" id="formPage">
+  <div class="card">
+    <h1>instantderivdeposit</h1>
+
+    <select id="type">
+      <option value="deposit">Deposit</option>
+      <option value="withdraw">Withdraw</option>
+    </select>
+
+    <input placeholder="Deriv Account ID (CR...)">
+    <input placeholder="EcoCash Number (07...)">
+    <input type="number" placeholder="Amount (USD)">
+
+    <button onclick="submitForm()">Submit</button>
+  </div>
+</div>
+
+<!-- PROCESS PAGE -->
+<div class="page hidden" id="processPage">
+  <div class="card">
+    <h2>Processing</h2>
+    <div class="loader" id="loader"></div>
+    <div class="progress" id="progress">0%</div>
+    <div class="message" id="message"></div>
+    <div class="ref" id="ref"></div>
+    <div id="action"></div>
+    <button class="back" onclick="goBack()">← Back</button>
+  </div>
+</div>
+
+<script>
+const clickSound=document.getElementById("clickSound");
+
+function fx(){
+    clickSound.currentTime=0;
+    clickSound.play();
+    if(navigator.vibrate) navigator.vibrate(40);
+}
+
+function generateRef(){
+    return "IDD-" + Math.random().toString(36).substring(2,10).toUpperCase();
+}
+
+function submitForm(){
+    fx();
+    document.getElementById("formPage").classList.add("hidden");
+    document.getElementById("processPage").classList.remove("hidden");
+
+    const type=document.getElementById("type").value;
+    const loader=document.getElementById("loader");
+    const progress=document.getElementById("progress");
+    const message=document.getElementById("message");
+    const action=document.getElementById("action");
+    const ref=document.getElementById("ref");
+
+    ref.innerHTML="Transaction Ref: <b>"+generateRef()+"</b>";
+
+    let p=0;
+    const speed=type==="deposit"?50:90;
+
+    message.innerHTML=type==="deposit"
+        ?"Processing your deposit securely..."
+        :"Generating your Deriv withdrawal link...";
+
+    const timer=setInterval(()=>{
+        p++;
+        progress.innerText=p+"%";
+        if(p>=100){
+            clearInterval(timer);
+            loader.style.display="none";
+
+            if(type==="deposit"){
+                message.innerHTML=
+                "⚠️ Deposits are currently being delayed.<br><br>"+
+                "We are ensuring fast and secure deposits.<br><br>"+
+                "Thank you for your patience.";
+            }else{
+                message.innerHTML="Your Deriv withdrawal link is ready.";
+                action.innerHTML=
+                `<button onclick="goWithdraw()">Proceed to Withdraw</button>`;
+            }
+        }
+    },speed);
+}
+
+function goWithdraw(){
+    fx();
+    window.location.href="https://p2p.deriv.com/advertiser/524983?advert_id=3570516";
+}
+
+function goBack(){
+    fx();
+    document.getElementById("processPage").classList.add("hidden");
+    document.getElementById("formPage").classList.remove("hidden");
+    document.getElementById("loader").style.display="block";
+    document.getElementById("progress").innerText="0%";
+    document.getElementById("message").innerHTML="";
+    document.getElementById("ref").innerHTML="";
+    document.getElementById("action").innerHTML="";
+}
+</script>
+
+</body>
+</html>
